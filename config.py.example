@@ -1,0 +1,8 @@
+# Model name
+MODEL_NAME = "deepseek/deepseek-chat-v3.1:free"
+
+# API base URL
+API_BASE_URL = "https://openrouter.ai/api/v1"
+
+# API authorization token
+API_KEY = "<AUTH_TOKEN>

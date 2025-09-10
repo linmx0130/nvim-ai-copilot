@@ -1,0 +1,10 @@
+[project]
+name = "nvim-ai-copilot"
+version = "0.1.0"
+description = "Simple AI Copilot plugin for neovim"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "openai>=1.107.0",
+  "pynvim",
+]
