@@ -5,4 +5,10 @@ MODEL_NAME = "deepseek/deepseek-chat-v3.1:free"
 API_BASE_URL = "https://openrouter.ai/api/v1"
 
 # API authorization token
-API_KEY = "<AUTH_TOKEN>
+API_KEY = "<AUTH_TOKEN>"
+
+# Maximum lines before/after the cursor to be included in the prompt.
+# Suppose this number is N, in total at most 2N + 1 lines will be included.
+#
+# If it's zero, the whole file will be included.
+MAX_CONTEXT_LINES = 0

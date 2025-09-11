@@ -1,6 +1,6 @@
 from pynvim import attach
 from openai import OpenAI
-from config import MODEL_NAME, API_BASE_URL, API_KEY
+from config import MODEL_NAME, API_BASE_URL, API_KEY, MAX_CONTEXT_LINES
 import sys
 import os
 import time
@@ -49,14 +49,25 @@ def main(nvim_socket_path: str):
 
     # grab the content and split it based on the cursor position
     content_lines = [line for line in current_buffer]
-    before_cursor = content_lines[: cursor_position[0] - 1]
+    if MAX_CONTEXT_LINES == 0:
+        before_cursor = content_lines[: cursor_position[0] - 1]
+        after_cursor = content_lines[cursor_position[0] :]
+    else:
+        before_cursor = content_lines[
+            max(0, cursor_position[0] - 1 - MAX_CONTEXT_LINES) : cursor_position[0] - 1
+        ]
+        after_cursor = content_lines[cursor_position[0] :]
+        if len(after_cursor) > MAX_CONTEXT_LINES:
+            after_cursor = after_cursor[:MAX_CONTEXT_LINES]
+
     before_cursor.append(content_lines[cursor_position[0] - 1][: cursor_position[1]])
+
     after_cursor = [
         content_lines[cursor_position[0] - 1][cursor_position[1] :]
-    ] + content_lines[cursor_position[0] :]
+    ] + after_cursor
 
+    # Get the surrounding context of the cursor
     prompt = get_prompt(filename, "\n".join(before_cursor), "\n".join(after_cursor))
-
     print(prompt)
 
     nvim.command('echo "Copilot is generating contents..."')
