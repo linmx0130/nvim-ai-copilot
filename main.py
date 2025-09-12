@@ -1,3 +1,4 @@
+from typing import Optional
 from pynvim import attach
 from openai import OpenAI
 from config import MODEL_NAME, API_BASE_URL, API_KEY, MAX_CONTEXT_LINES
@@ -10,10 +11,17 @@ def get_openai_client():
     return OpenAI(base_url=API_BASE_URL, api_key=API_KEY)
 
 
-def get_prompt(filename: str, before_cursor: str, after_cursor: str) -> str:
+def get_prompt(
+    filename: str, before_cursor: str, after_cursor: str, filetype: Optional[str]
+) -> str:
     """
     Return a prompt with the content before and after the cursor position.
     """
+
+    # Fallback to use plain_text if filetype is empty
+    if filetype is None or len(filetype) == 0:
+        filetype = "plain_text"
+
     return f"""
 # Task
 Act as a good programmer. Based on the code context provided, fill proper code that 
@@ -27,6 +35,7 @@ makes sense in the context.
 
 ## Metadata
 Filename: {filename}
+File type: {filetype}
 
 ## Context before the blank
 ```
@@ -46,7 +55,9 @@ def main(nvim_socket_path: str):
     current_buffer = nvim.current.buffer
     cursor_position = nvim.current.window.cursor
     filename = current_buffer.name
+    filetype = nvim.command_output("echo &filetype").strip()
 
+    # If the filetype is not empty, add it to the prompt or use it for model selection?
     # grab the content and split it based on the cursor position
     content_lines = [line for line in current_buffer]
     if MAX_CONTEXT_LINES == 0:
@@ -67,7 +78,9 @@ def main(nvim_socket_path: str):
     ] + after_cursor
 
     # Get the surrounding context of the cursor
-    prompt = get_prompt(filename, "\n".join(before_cursor), "\n".join(after_cursor))
+    prompt = get_prompt(
+        filename, "\n".join(before_cursor), "\n".join(after_cursor), filetype
+    )
     print(prompt)
 
     nvim.command('echo "Copilot is generating contents..."')
