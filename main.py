@@ -105,6 +105,9 @@ def main(nvim_socket_path: str):
                     dots = "." * (counter % 6 + 1)
                     nvim.command(f'echo "Copilot is generating contents {dots}"')
                     last_print_time = time.monotonic()
+            if cursor_position != nvim.current.window.cursor:
+                nvim.command('echo "Copilot aborted: cursor moved."')
+                return
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
         nvim.command(f'echo "Copilot fails to generate correct output.", Error: {e}')
@@ -115,11 +118,13 @@ def main(nvim_socket_path: str):
         generate_lines = generate_lines[1:-1]
         generate_lines[0] = before_cursor[-1] + generate_lines[0]
         generate_lines[-1] = generate_lines[-1] + after_cursor[0]
-        current_buffer[cursor_position[0] - 1] = generate_lines[0]
-        if len(generate_lines) > 1:
-            current_buffer.append(generate_lines[1:], cursor_position[0])
-    else:
-        nvim.command('echo "Copilot fails to generate correct output."')
+        if cursor_position == nvim.current.window.cursor:
+            # Only update the buffer if cursor has not moved
+            current_buffer[cursor_position[0] - 1] = generate_lines[0]
+            if len(generate_lines) > 1:
+                current_buffer.append(generate_lines[1:], cursor_position[0])
+        else:
+            nvim.command('echo "Copilot aborted: cursor moved."')
 
 
 if __name__ == "__main__":
