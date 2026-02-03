@@ -31,7 +31,7 @@ makes sense in the context.
 * Generate the proper code only. 
 * Do not add any explanation.
 * Generated code should be quoted by ```.
-* Do not add extra intent
+* Do not add extra content
 
 ## Metadata
 Filename: {filename}
@@ -91,20 +91,20 @@ def main(nvim_socket_path: str):
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model=MODEL_NAME,
-            max_completion_tokens=512,
+            max_completion_tokens=8192,
             stream=True,
         )
 
         generated_output: str = ""
         counter = 0
         for chunk in chat_completion:
+            if time.monotonic() - last_print_time > 1.0:
+                counter += 1
+                dots = "." * (counter % 6 + 1)
+                nvim.command(f'echo "Copilot is generating contents {dots}"')
+                last_print_time = time.monotonic()
             if chunk.choices[0].delta.content:
                 generated_output += chunk.choices[0].delta.content
-                if time.monotonic() - last_print_time > 1.0:
-                    counter += 1
-                    dots = "." * (counter % 6 + 1)
-                    nvim.command(f'echo "Copilot is generating contents {dots}"')
-                    last_print_time = time.monotonic()
             if cursor_position != nvim.current.window.cursor:
                 nvim.command('echo "Copilot aborted: cursor moved."')
                 return
